@@ -1,0 +1,649 @@
+<html lang="fr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Arbre Généalogique</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Georgia,serif;background:#FAF6EE;color:#2E2416;min-height:100vh}
+
+header{background:#1A1510;padding:28px 20px 20px;text-align:center}
+.orn{font-size:10px;letter-spacing:4px;color:#C9A84C;font-family:Arial,sans-serif;margin-bottom:8px}
+h1{font-size:clamp(22px,6vw,40px);font-weight:600;color:#FAF6EE;line-height:1.2}
+h1 span{color:#C9A84C}
+.hline{width:60px;height:1px;background:#C9A84C;margin:12px auto;position:relative}
+.hline::before,.hline::after{content:'◆';position:absolute;top:-5px;font-size:7px;color:#C9A84C}
+.hline::before{left:-13px}.hline::after{right:-13px}
+.hsub{font-size:12px;color:#A8936A;font-family:Arial,sans-serif;letter-spacing:1px}
+
+.toolbar{background:#2E2416;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw{position:relative;flex:1;min-width:0}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none}
+#search{width:100%;height:40px;padding:0 10px 0 34px;background:rgba(255,255,255,.08);border:1px solid rgba(201,168,76,.35);border-radius:8px;color:#FAF6EE;font-size:14px;font-family:Arial,sans-serif;outline:none}
+#search::placeholder{color:#A8936A}
+.btn{height:40px;padding:0 14px;border-radius:8px;font-size:13px;font-family:Arial,sans-serif;cursor:pointer;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.12);color:#E8C97A;white-space:nowrap;-webkit-appearance:none}
+.btn.acc{background:#C9A84C;color:#1A1510;border-color:#C9A84C;font-weight:600}
+.sbar{width:100%;font-size:11px;color:#A8936A;font-family:Arial,sans-serif;padding-top:2px}
+.sbar strong{color:#C9A84C}
+
+.gw{padding:16px 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:12px}
+
+.card{background:#fff;border:1px solid #EDE5D0;border-radius:12px;overflow:hidden}
+.card.found{border-color:#C9A84C;box-shadow:0 0 0 2px rgba(201,168,76,.2)}
+.ch{background:#1A1510;padding:12px 11px 10px;position:relative}
+.ch::after{content:'';position:absolute;bottom:0;left:11px;right:11px;height:1px;background:linear-gradient(90deg,transparent,#C9A84C,transparent)}
+.crow{display:flex;align-items:center;gap:9px}
+.av{width:36px;height:36px;border-radius:50%;border:1.5px solid #C9A84C;background:#3D3020;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#C9A84C;flex-shrink:0;font-family:Arial,sans-serif}
+.ci{flex:1;min-width:0}
+.cn{font-size:14px;font-weight:600;color:#FAF6EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct{font-size:9px;letter-spacing:1px;color:#C9A84C;font-family:Arial,sans-serif;text-transform:uppercase;margin-top:1px}
+.badge{background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.4);color:#C9A84C;font-size:11px;font-weight:600;border-radius:20px;padding:2px 8px;flex-shrink:0;font-family:Arial,sans-serif}
+.dcf{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
+
+.pls{padding:7px 9px 10px}
+.pl{display:flex;align-items:center;padding:5px 5px;border-radius:6px;gap:6px}
+.pl:active{background:#FAF6EE}
+.pd{width:5px;height:5px;border-radius:50%;background:#C9A84C;flex-shrink:0;opacity:.5}
+.pn{flex:1;font-size:13px;color:#2E2416;line-height:1.3;font-family:Arial,sans-serif}
+.pn.hit{font-weight:600}
+.dp{width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:#ddd;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:Arial,sans-serif}
+.ap{width:100%;margin-top:6px;height:32px;border:1px dashed rgba(201,168,76,.4);background:transparent;color:#C9A84C;font-size:13px;font-family:Arial,sans-serif;border-radius:7px;cursor:pointer}
+
+.ov{display:none;position:fixed;inset:0;background:rgba(10,7,3,.65);z-index:200;align-items:flex-end;justify-content:center}
+.ov.open{display:flex}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:22px 20px 32px;width:100%;max-width:500px}
+.modal h3{font-size:18px;font-weight:600;color:#1A1510;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #EDE5D0}
+.modal label{font-size:11px;letter-spacing:.7px;color:#A8936A;font-family:Arial,sans-serif;text-transform:uppercase;display:block;margin:11px 0 4px}
+.modal input,.modal select{width:100%;height:44px;padding:0 12px;border:1px solid #EDE5D0;border-radius:8px;font-size:15px;font-family:Arial,sans-serif;color:#2E2416;background:#FAF6EE;outline:none;-webkit-appearance:none}
+.mbtns{display:flex;gap:8px;margin-top:18px}
+.mbtns .btn{flex:1;height:44px;font-size:15px}
+</style>
+</head>
+<body>
+<header>
+  <div class="orn">✦ Organisation ✦</div>
+  <h1>Arbre <span>Généalogique</span></h1>
+  <div class="hline"></div>
+  <div class="hsub">Bergers de Famille &amp; FDs</div>
+</header>
+
+<div class="toolbar">
+  <div class="sw">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#C9A84C" stroke-width="1.8" stroke-linecap="round"></path></svg>
+    <input type="text" id="search" placeholder="Rechercher un nom…" oninput="render()">
+  </div>
+  <button class="btn" onclick="openModal('FD')">+ FD</button>
+  <button class="btn" onclick="openModal('cf')">+ Berger</button>
+  <button class="btn acc" onclick="exportHTML()">⇓ Exporter</button>
+  <div class="sbar" id="stats"><strong>21</strong> Bergers · <strong>112</strong> FDs</div>
+</div>
+
+<div class="gw"><div class="grid" id="grid"><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Axel ONDO')">✕</button>
+        <div class="crow">
+          <div class="av">AO</div>
+          <div class="ci">
+            <div class="cn">Axel ONDO</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">6</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Désiré AYORI</span><button class="dp" onclick="delFD('Axel ONDO','Désiré AYORI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Didier KINGOMBE</span><button class="dp" onclick="delFD('Axel ONDO','Didier KINGOMBE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Michel Junior KOUNDOUNO</span><button class="dp" onclick="delFD('Axel ONDO','Michel Junior KOUNDOUNO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Christopher MAPAGA</span><button class="dp" onclick="delFD('Axel ONDO','Christopher MAPAGA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Evan Grâce NDALA</span><button class="dp" onclick="delFD('Axel ONDO','Evan Grâce NDALA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Declane TCHILOEMBA</span><button class="dp" onclick="delFD('Axel ONDO','Declane TCHILOEMBA')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Axel ONDO')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Cedric NGOULOU')">✕</button>
+        <div class="crow">
+          <div class="av">CN</div>
+          <div class="ci">
+            <div class="cn">Cedric NGOULOU</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">7</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Carlos DALUZ</span><button class="dp" onclick="delFD('Cedric NGOULOU','Carlos DALUZ')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Patrick DEJEAN</span><button class="dp" onclick="delFD('Cedric NGOULOU','Patrick DEJEAN')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Davy GOUMBA</span><button class="dp" onclick="delFD('Cedric NGOULOU','Davy GOUMBA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Novalie HOUNGBEDJI</span><button class="dp" onclick="delFD('Cedric NGOULOU','Novalie HOUNGBEDJI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Dan ITOMBO</span><button class="dp" onclick="delFD('Cedric NGOULOU','Dan ITOMBO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Adingra KOUAME</span><button class="dp" onclick="delFD('Cedric NGOULOU','Adingra KOUAME')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Zana OUATTARA</span><button class="dp" onclick="delFD('Cedric NGOULOU','Zana OUATTARA')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Cedric NGOULOU')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Christopher MBUNDANI')">✕</button>
+        <div class="crow">
+          <div class="av">CM</div>
+          <div class="ci">
+            <div class="cn">Christopher MBUNDANI</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">1</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Steven SATCHIVI</span><button class="dp" onclick="delFD('Christopher MBUNDANI','Steven SATCHIVI')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Christopher MBUNDANI')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Dominique EKOTTO')">✕</button>
+        <div class="crow">
+          <div class="av">DE</div>
+          <div class="ci">
+            <div class="cn">Dominique EKOTTO</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">3</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Valérie POATY</span><button class="dp" onclick="delFD('Dominique EKOTTO','Valérie POATY')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ornella ZAMBA</span><button class="dp" onclick="delFD('Dominique EKOTTO','Ornella ZAMBA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Nathalie NEUGWA</span><button class="dp" onclick="delFD('Dominique EKOTTO','Nathalie NEUGWA')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Dominique EKOTTO')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Eunice IGNAMBI')">✕</button>
+        <div class="crow">
+          <div class="av">EI</div>
+          <div class="ci">
+            <div class="cn">Eunice IGNAMBI</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">5</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Pauline DROWA</span><button class="dp" onclick="delFD('Eunice IGNAMBI','Pauline DROWA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Nora MAIGA</span><button class="dp" onclick="delFD('Eunice IGNAMBI','Nora MAIGA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Naomi ZAKPA</span><button class="dp" onclick="delFD('Eunice IGNAMBI','Naomi ZAKPA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Dana A</span><button class="dp" onclick="delFD('Eunice IGNAMBI','Dana A')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Shalom SAH-TOSSOU</span><button class="dp" onclick="delFD('Eunice IGNAMBI','Shalom SAH-TOSSOU')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Eunice IGNAMBI')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Georges ELENGA-NGOLLO')">✕</button>
+        <div class="crow">
+          <div class="av">GE</div>
+          <div class="ci">
+            <div class="cn">Georges ELENGA-NGOLLO</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">4</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Jeany FOTSO DE TIETSE</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Jeany FOTSO DE TIETSE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Emmanuel KOUASSI</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Emmanuel KOUASSI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Gloria SAFOUESS</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Gloria SAFOUESS')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Reina SETHSON</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Reina SETHSON')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Georges ELENGA-NGOLLO')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Herve MAPAMA')">✕</button>
+        <div class="crow">
+          <div class="av">HM</div>
+          <div class="ci">
+            <div class="cn">Herve MAPAMA</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">2</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Jude Bernard GWODOG</span><button class="dp" onclick="delFD('Herve MAPAMA','Jude Bernard GWODOG')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Hophni MOUKOUMBI</span><button class="dp" onclick="delFD('Herve MAPAMA','Hophni MOUKOUMBI')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Herve MAPAMA')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Jessica LAZA MANZAMBI')">✕</button>
+        <div class="crow">
+          <div class="av">JL</div>
+          <div class="ci">
+            <div class="cn">Jessica LAZA MANZAMBI</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">11</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Jennifer DESTOUCHES</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Jennifer DESTOUCHES')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Naiyisha TCHANQUE</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Naiyisha TCHANQUE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Eunice IGNAMBI</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Eunice IGNAMBI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Dana A</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Dana A')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Nora MAIGA</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Nora MAIGA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Naomi ZAKPA</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Naomi ZAKPA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Shalom SAH-TOSSOU</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Shalom SAH-TOSSOU')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Pauline DROWA</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Pauline DROWA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Emeline GUSTAVE</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Emeline GUSTAVE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Saimen CHAND</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Saimen CHAND')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Loana KIMBEMBE</span><button class="dp" onclick="delFD('Jessica LAZA MANZAMBI','Loana KIMBEMBE')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Jessica LAZA MANZAMBI')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Joelle-Andrée TIEHI')">✕</button>
+        <div class="crow">
+          <div class="av">JT</div>
+          <div class="ci">
+            <div class="cn">Joelle-Andrée TIEHI</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">8</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Céleste DJIMTOÏNGAR</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Céleste DJIMTOÏNGAR')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Phaelle FILANKEMBO</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Phaelle FILANKEMBO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Natacha KASSANDA DA SILVA</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Natacha KASSANDA DA SILVA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Alouska LAKE</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Alouska LAKE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ruffine MUKENGULE</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Ruffine MUKENGULE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Florance OULA</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Florance OULA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Francesca OSSOUNGOU</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Francesca OSSOUNGOU')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Amanda ONGUI</span><button class="dp" onclick="delFD('Joelle-Andrée TIEHI','Amanda ONGUI')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Joelle-Andrée TIEHI')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Marie SANTOS')">✕</button>
+        <div class="crow">
+          <div class="av">MS</div>
+          <div class="ci">
+            <div class="cn">Marie SANTOS</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">8</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Leida BAPTISTA</span><button class="dp" onclick="delFD('Marie SANTOS','Leida BAPTISTA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Rockya CISSE</span><button class="dp" onclick="delFD('Marie SANTOS','Rockya CISSE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Dahlia FODJO</span><button class="dp" onclick="delFD('Marie SANTOS','Dahlia FODJO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Kristie Evans TCHUNDJU MAYOUDOM</span><button class="dp" onclick="delFD('Marie SANTOS','Kristie Evans TCHUNDJU MAYOUDOM')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Mobayi PELE</span><button class="dp" onclick="delFD('Marie SANTOS','Mobayi PELE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Treicy KASSAT</span><button class="dp" onclick="delFD('Marie SANTOS','Treicy KASSAT')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Kerene KERENE</span><button class="dp" onclick="delFD('Marie SANTOS','Kerene KERENE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Heloise ONIANGUE</span><button class="dp" onclick="delFD('Marie SANTOS','Heloise ONIANGUE')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Marie SANTOS')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Marina-Ingrid N\'GUESSAN')">✕</button>
+        <div class="crow">
+          <div class="av">MN</div>
+          <div class="ci">
+            <div class="cn">Marina-Ingrid N'GUESSAN</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">7</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Careine VIGAN</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Careine VIGAN')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Yaël MEBALEY</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Yaël MEBALEY')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Françoise ZINSOU</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Françoise ZINSOU')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Jotricia LOUBELO</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Jotricia LOUBELO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Oumou NIANGADOU</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Oumou NIANGADOU')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Vanessa AGNAMAN</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Vanessa AGNAMAN')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Emmanuel ADA BIBANG</span><button class="dp" onclick="delFD('Marina-Ingrid N\'GUESSAN','Emmanuel ADA BIBANG')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Marina-Ingrid N\'GUESSAN')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Mobayi PELE')">✕</button>
+        <div class="crow">
+          <div class="av">MP</div>
+          <div class="ci">
+            <div class="cn">Mobayi PELE</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">2</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Léonie ATCHABAO</span><button class="dp" onclick="delFD('Mobayi PELE','Léonie ATCHABAO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Rebecca DEGUE</span><button class="dp" onclick="delFD('Mobayi PELE','Rebecca DEGUE')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Mobayi PELE')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Naiyisha TCHANQUE')">✕</button>
+        <div class="crow">
+          <div class="av">NT</div>
+          <div class="ci">
+            <div class="cn">Naiyisha TCHANQUE</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">3</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Loana KIMBEMBE</span><button class="dp" onclick="delFD('Naiyisha TCHANQUE','Loana KIMBEMBE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Emeline GUSTAVE</span><button class="dp" onclick="delFD('Naiyisha TCHANQUE','Emeline GUSTAVE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Saimen CHAND</span><button class="dp" onclick="delFD('Naiyisha TCHANQUE','Saimen CHAND')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Naiyisha TCHANQUE')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Nelly EYOUM')">✕</button>
+        <div class="crow">
+          <div class="av">NE</div>
+          <div class="ci">
+            <div class="cn">Nelly EYOUM</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">3</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Sybelle AMBETO</span><button class="dp" onclick="delFD('Nelly EYOUM','Sybelle AMBETO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Naomi MALELA</span><button class="dp" onclick="delFD('Nelly EYOUM','Naomi MALELA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Lynda Frazi MINGOLÉ</span><button class="dp" onclick="delFD('Nelly EYOUM','Lynda Frazi MINGOLÉ')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Nelly EYOUM')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Nina NGOULOU')">✕</button>
+        <div class="crow">
+          <div class="av">NN</div>
+          <div class="ci">
+            <div class="cn">Nina NGOULOU</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">11</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Prescillia BEMBICANI</span><button class="dp" onclick="delFD('Nina NGOULOU','Prescillia BEMBICANI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Suzie DEJEAN</span><button class="dp" onclick="delFD('Nina NGOULOU','Suzie DEJEAN')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Hermione EMATI</span><button class="dp" onclick="delFD('Nina NGOULOU','Hermione EMATI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Emilie Audrey FONING</span><button class="dp" onclick="delFD('Nina NGOULOU','Emilie Audrey FONING')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Hilary JYKY</span><button class="dp" onclick="delFD('Nina NGOULOU','Hilary JYKY')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Christelle MINTSA</span><button class="dp" onclick="delFD('Nina NGOULOU','Christelle MINTSA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Astrid TCHANA</span><button class="dp" onclick="delFD('Nina NGOULOU','Astrid TCHANA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Fausta TCHISSAMBOU</span><button class="dp" onclick="delFD('Nina NGOULOU','Fausta TCHISSAMBOU')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Destine KOKOLO</span><button class="dp" onclick="delFD('Nina NGOULOU','Destine KOKOLO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Amina KEMBI</span><button class="dp" onclick="delFD('Nina NGOULOU','Amina KEMBI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Judith KOUASSI</span><button class="dp" onclick="delFD('Nina NGOULOU','Judith KOUASSI')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Nina NGOULOU')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Prescilia KIALA')">✕</button>
+        <div class="crow">
+          <div class="av">PK</div>
+          <div class="ci">
+            <div class="cn">Prescilia KIALA</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">0</div>
+        </div>
+      </div>
+      <div class="pls">
+        
+        <button class="ap" onclick="openModal('FD','Prescilia KIALA')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Rebbie MAPAMA')">✕</button>
+        <div class="crow">
+          <div class="av">RM</div>
+          <div class="ci">
+            <div class="cn">Rebbie MAPAMA</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">1</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Manuella KOUAMO</span><button class="dp" onclick="delFD('Rebbie MAPAMA','Manuella KOUAMO')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Rebbie MAPAMA')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Rebecca MOMBO')">✕</button>
+        <div class="crow">
+          <div class="av">RM</div>
+          <div class="ci">
+            <div class="cn">Rebecca MOMBO</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">12</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Colombe GOLET MOMBOULI</span><button class="dp" onclick="delFD('Rebecca MOMBO','Colombe GOLET MOMBOULI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ange KENGNE</span><button class="dp" onclick="delFD('Rebecca MOMBO','Ange KENGNE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Kady Desiree BOIGNON OUATTARA</span><button class="dp" onclick="delFD('Rebecca MOMBO','Kady Desiree BOIGNON OUATTARA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Pricilia NGOUFACK</span><button class="dp" onclick="delFD('Rebecca MOMBO','Pricilia NGOUFACK')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Lauviah TCHILOEMBA</span><button class="dp" onclick="delFD('Rebecca MOMBO','Lauviah TCHILOEMBA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Valerie AGNUI</span><button class="dp" onclick="delFD('Rebecca MOMBO','Valerie AGNUI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Marie Confort KUKPORTIE</span><button class="dp" onclick="delFD('Rebecca MOMBO','Marie Confort KUKPORTIE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Marie France BOMBA</span><button class="dp" onclick="delFD('Rebecca MOMBO','Marie France BOMBA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Dolores BIANZA</span><button class="dp" onclick="delFD('Rebecca MOMBO','Dolores BIANZA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Babi MUTOMBO</span><button class="dp" onclick="delFD('Rebecca MOMBO','Babi MUTOMBO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Noura LENGANI</span><button class="dp" onclick="delFD('Rebecca MOMBO','Noura LENGANI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Oceane NGUEKO</span><button class="dp" onclick="delFD('Rebecca MOMBO','Oceane NGUEKO')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Rebecca MOMBO')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Trésor TSHIMANGA')">✕</button>
+        <div class="crow">
+          <div class="av">TT</div>
+          <div class="ci">
+            <div class="cn">Trésor TSHIMANGA</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">11</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Kadoukpè BABAODI</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Kadoukpè BABAODI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Bruno DETCHINLI</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Bruno DETCHINLI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Moïse DJIMTOINGAR TOGDE</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Moïse DJIMTOINGAR TOGDE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Rebeca TSHIMANGA</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Rebeca TSHIMANGA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ben ILBOUDO</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Ben ILBOUDO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Mohamed SACO</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Mohamed SACO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Jenovic NGOY</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Jenovic NGOY')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Richard HENRI</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Richard HENRI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ange SIANE</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Ange SIANE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ange BINSA</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Ange BINSA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Ariane NWEGANG</span><button class="dp" onclick="delFD('Trésor TSHIMANGA','Ariane NWEGANG')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Trésor TSHIMANGA')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Vianney PELE')">✕</button>
+        <div class="crow">
+          <div class="av">VP</div>
+          <div class="ci">
+            <div class="cn">Vianney PELE</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">3</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Blaise NGOUA NGOUA</span><button class="dp" onclick="delFD('Vianney PELE','Blaise NGOUA NGOUA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Icare OUATTARA</span><button class="dp" onclick="delFD('Vianney PELE','Icare OUATTARA')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Vianney PELE</span><button class="dp" onclick="delFD('Vianney PELE','Vianney PELE')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Vianney PELE')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Zeina MEMENE')">✕</button>
+        <div class="crow">
+          <div class="av">ZM</div>
+          <div class="ci">
+            <div class="cn">Zeina MEMENE</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">4</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Chryssina SADJAN</span><button class="dp" onclick="delFD('Zeina MEMENE','Chryssina SADJAN')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Lyne Karla VEVO</span><button class="dp" onclick="delFD('Zeina MEMENE','Lyne Karla VEVO')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Sarah TSOLENYANU</span><button class="dp" onclick="delFD('Zeina MEMENE','Sarah TSOLENYANU')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Sabrina ALEXIS</span><button class="dp" onclick="delFD('Zeina MEMENE','Sabrina ALEXIS')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Zeina MEMENE')">+ Ajouter un FD</button>
+      </div></div></div></div>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="mt">Ajouter un FD</h3>
+    <div id="mb"><label>Berger de famille</label><select id="mc"><option value="Axel ONDO">Axel ONDO</option><option value="Cedric NGOULOU">Cedric NGOULOU</option><option value="Christopher MBUNDANI">Christopher MBUNDANI</option><option value="Dominique EKOTTO">Dominique EKOTTO</option><option value="Eunice IGNAMBI">Eunice IGNAMBI</option><option value="Georges ELENGA-NGOLLO">Georges ELENGA-NGOLLO</option><option value="Herve MAPAMA">Herve MAPAMA</option><option value="Jessica LAZA MANZAMBI">Jessica LAZA MANZAMBI</option><option value="Joelle-Andrée TIEHI">Joelle-Andrée TIEHI</option><option value="Marie SANTOS" selected="">Marie SANTOS</option><option value="Marina-Ingrid N'GUESSAN">Marina-Ingrid N'GUESSAN</option><option value="Mobayi PELE">Mobayi PELE</option><option value="Naiyisha TCHANQUE">Naiyisha TCHANQUE</option><option value="Nelly EYOUM">Nelly EYOUM</option><option value="Nina NGOULOU">Nina NGOULOU</option><option value="Prescilia KIALA">Prescilia KIALA</option><option value="Rebbie MAPAMA">Rebbie MAPAMA</option><option value="Rebecca MOMBO">Rebecca MOMBO</option><option value="Trésor TSHIMANGA">Trésor TSHIMANGA</option><option value="Vianney PELE">Vianney PELE</option><option value="Zeina MEMENE">Zeina MEMENE</option></select><label>Prénom</label><input id="mp" placeholder="Prénom"><label>Nom</label><input id="mn" placeholder="NOM"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn acc" onclick="confirmModal()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let db = {
+  "Axel ONDO": [
+    "Désiré AYORI",
+    "Didier KINGOMBE",
+    "Michel Junior KOUNDOUNO",
+    "Christopher MAPAGA",
+    "Evan Grâce NDALA",
+    "Declane TCHILOEMBA"
+  ],
+  "Cedric NGOULOU": [
+    "Carlos DALUZ",
+    "Patrick DEJEAN",
+    "Davy GOUMBA",
+    "Novalie HOUNGBEDJI",
+    "Dan ITOMBO",
+    "Adingra KOUAME",
+    "Zana OUATTARA"
+  ],
+  "Christopher MBUNDANI": [
+    "Steven SATCHIVI"
+  ],
+  "Dominique EKOTTO": [
+    "Valérie POATY",
+    "Ornella ZAMBA",
+    "Nathalie NEUGWA"
+  ],
+  "Eunice IGNAMBI": [
+    "Pauline DROWA",
+    "Nora MAIGA",
+    "Naomi ZAKPA",
+    "Dana A",
+    "Shalom SAH-TOSSOU"
+  ],
+  "Georges ELENGA-NGOLLO": [
+    "Jeany FOTSO DE TIETSE",
+    "Emmanuel KOUASSI",
+    "Gloria SAFOUESS",
+    "Reina SETHSON"
+  ],
+  "Herve MAPAMA": [
+    "Jude Bernard GWODOG",
+    "Hophni MOUKOUMBI"
+  ],
+  "Jessica LAZA MANZAMBI": [
+    "Jennifer DESTOUCHES",
+    "Naiyisha TCHANQUE",
+    "Eunice IGNAMBI",
+    "Dana A",
+    "Nora MAIGA",
+    "Naomi ZAKPA",
+    "Shalom SAH-TOSSOU",
+    "Pauline DROWA",
+    "Emeline GUSTAVE",
+    "Saimen CHAND",
+    "Loana KIMBEMBE"
+  ],
+  "Joelle-Andrée TIEHI": [
+    "Céleste DJIMTOÏNGAR",
+    "Phaelle FILANKEMBO",
+    "Natacha KASSANDA DA SILVA",
+    "Alouska LAKE",
+    "Ruffine MUKENGULE",
+    "Florance OULA",
+    "Francesca OSSOUNGOU",
+    "Amanda ONGUI"
+  ],
+  "Marie SANTOS": [
+    "Leida BAPTISTA",
+    "Rockya CISSE",
+    "Dahlia FODJO",
+    "Kristie Evans TCHUNDJU MAYOUDOM",
+    "Mobayi PELE",
+    "Treicy KASSAT",
+    "Kerene KERENE",
+    "Heloise ONIANGUE"
+  ],
+  "Marina-Ingrid N'GUESSAN": [
+    "Careine VIGAN",
+    "Yaël MEBALEY",
+    "Françoise ZINSOU",
+    "Jotricia LOUBELO",
+    "Oumou NIANGADOU",
+    "Vanessa AGNAMAN",
+    "Emmanuel ADA BIBANG"
+  ],
+  "Mobayi PELE": [
+    "Léonie ATCHABAO",
+    "Rebecca DEGUE"
+  ],
+  "Naiyisha TCHANQUE": [
+    "Loana KIMBEMBE",
+    "Emeline GUSTAVE",
+    "Saimen CHAND"
+  ],
+  "Nelly EYOUM": [
+    "Sybelle AMBETO",
+    "Naomi MALELA",
+    "Lynda Frazi MINGOLÉ"
+  ],
+  "Nina NGOULOU": [
+    "Prescillia BEMBICANI",
+    "Suzie DEJEAN",
+    "Hermione EMATI",
+    "Emilie Audrey FONING",
+    "Hilary JYKY",
+    "Christelle MINTSA",
+    "Astrid TCHANA",
+    "Fausta TCHISSAMBOU",
+    "Destine KOKOLO",
+    "Amina KEMBI",
+    "Judith KOUASSI"
+  ],
+  "Prescilia KIALA": [],
+  "Rebbie MAPAMA": [
+    "Manuella KOUAMO"
+  ],
+  "Rebecca MOMBO": [
+    "Colombe GOLET MOMBOULI",
+    "Ange KENGNE",
+    "Kady Desiree BOIGNON OUATTARA",
+    "Pricilia NGOUFACK",
+    "Lauviah TCHILOEMBA",
+    "Valerie AGNUI",
+    "Marie Confort KUKPORTIE",
+    "Marie France BOMBA",
+    "Dolores BIANZA",
+    "Babi MUTOMBO",
+    "Noura LENGANI",
+    "Oceane NGUEKO"
+  ],
+  "Trésor TSHIMANGA": [
+    "Kadoukpè BABAODI",
+    "Bruno DETCHINLI",
+    "Moïse DJIMTOINGAR TOGDE",
+    "Rebeca TSHIMANGA",
+    "Ben ILBOUDO",
+    "Mohamed SACO",
+    "Jenovic NGOY",
+    "Richard HENRI",
+    "Ange SIANE",
+    "Ange BINSA",
+    "Ariane NWEGANG"
+  ],
+  "Vianney PELE": [
+    "Blaise NGOUA NGOUA",
+    "Icare OUATTARA",
+    "Vianney PELE"
+  ],
+  "Zeina MEMENE": [
+    "Chryssina SADJAN",
+    "Lyne Karla VEVO",
+    "Sarah TSOLENYANU",
+    "Sabrina ALEXIS"
+  ]
+};
+let ma = null;
+
+function ini(n){return n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()}
+function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+function render(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  Object.keys(db).sort((a,b)=>a.localeCompare(b,'fr')).forEach(cf=>{
+    const fds=db[cf];
+    const cfm=cf.toLowerCase().includes(q);
+    const hits=fds.filter(p=>p.toLowerCase().includes(q));
+    if(q&&!cfm&&hits.length===0)return;
+    const show=(q&&!cfm)?hits:fds;
+    const card=document.createElement('div');
+    card.className='card'+(q&&(cfm||hits.length>0)?' found':'');
+    card.innerHTML=`
+      <div class="ch">
+        <button class="dcf" onclick="delCF('${esc(cf)}')" >✕</button>
+        <div class="crow">
+          <div class="av">${ini(cf)}</div>
+          <div class="ci">
+            <div class="cn">${cf}</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">${fds.length}</div>
+        </div>
+      </div>
+      <div class="pls">
+        ${show.map(p=>`<div class="pl"><div class="pd"></div><span class="pn${q&&p.toLowerCase().includes(q)?' hit':''}">${p}</span><button class="dp" onclick="delFD('${esc(cf)}','${esc(p)}')">✕</button></div>`).join('')}
+        <button class="ap" onclick="openModal('FD','${esc(cf)}')">+ Ajouter un FD</button>
+      </div>`;
+    g.appendChild(card);
+  });
+  document.getElementById('stats').innerHTML=`<strong>${Object.keys(db).length}</strong> Bergers · <strong>${Object.values(db).flat().length}</strong> FDs`;
+}
+
+function delFD(cf,p){if(!confirm('Retirer "'+p+'" ?'))return;db[cf]=db[cf].filter(x=>x!==p);render()}
+function delCF(cf){if(!confirm('Supprimer "'+cf+'" ?'))return;delete db[cf];render()}
+
+function openModal(t,pre){
+  pre=pre||'';ma=t;
+  const b=document.getElementById('mb');
+  if(t==='FD'){
+    document.getElementById('mt').textContent='Ajouter un FD';
+    const o=Object.keys(db).sort((a,b)=>a.localeCompare(b,'fr')).map(cf=>`<option value="${cf}"${cf===pre?' selected':''}>${cf}</option>`).join('');
+    b.innerHTML='<label>Berger de famille</label><select id="mc">'+o+'</select><label>Prénom</label><input id="mp" placeholder="Prénom"><label>Nom</label><input id="mn" placeholder="NOM">';
+  }else{
+    document.getElementById('mt').textContent='Nouveau Berger';
+    b.innerHTML='<label>Prénom</label><input id="cp" placeholder="Prénom"><label>Nom</label><input id="cn2" placeholder="NOM">';
+  }
+  document.getElementById('ov').classList.add('open');
+  setTimeout(()=>{const f=b.querySelector('input,select');if(f)f.focus()},100);
+}
+function closeModal(){document.getElementById('ov').classList.remove('open');ma=null}
+function confirmModal(){
+  if(ma==='FD'){
+    const cf=document.getElementById('mc').value;
+    const p=document.getElementById('mp').value.trim();
+    const n=document.getElementById('mn').value.trim().toUpperCase();
+    if(!p||!n){alert('Remplir tous les champs');return}
+    if(!db[cf].includes(p+' '+n))db[cf].push(p+' '+n);
+  }else{
+    const p=document.getElementById('cp').value.trim();
+    const n=document.getElementById('cn2').value.trim().toUpperCase();
+    if(!p||!n){alert('Remplir tous les champs');return}
+    if(!db[p+' '+n])db[p+' '+n]=[];
+  }
+  closeModal();render();
+}
+function exportHTML(){
+  const src = document.documentElement.outerHTML;
+  const updated = src.replace(/let db = \{[\s\S]*?\};/, 'let db = ' + JSON.stringify(db, null, 2) + ';');
+  const blob = new Blob([updated], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'arbre_genealogique_updated.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+render();
+</script>
+
+</body></html>
