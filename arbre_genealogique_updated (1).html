@@ -77,7 +77,7 @@ h1 span{color:#C9A84C}
   <button class="btn" onclick="openModal('FD')">+ FD</button>
   <button class="btn" onclick="openModal('cf')">+ Berger</button>
   <button class="btn acc" onclick="exportHTML()">⇓ Exporter</button>
-  <div class="sbar" id="stats"><strong>21</strong> Bergers · <strong>106</strong> FDs</div>
+  <div class="sbar" id="stats"><strong>22</strong> Bergers · <strong>107</strong> FDs</div>
 </div>
 
 <div class="gw"><div class="grid" id="grid"><div class="card">
@@ -170,6 +170,21 @@ h1 span{color:#C9A84C}
       <div class="pls">
         <div class="pl"><div class="pd"></div><span class="pn">Jeany FOTSO DE TIETSE</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Jeany FOTSO DE TIETSE')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Emmanuel KOUASSI</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Emmanuel KOUASSI')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Gloria SAFOUESS</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Gloria SAFOUESS')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Reina SETHSON</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Reina SETHSON')">✕</button></div><div class="pl"><div class="pd"></div><span class="pn">Moise DJIMTOINGAR TOGDE</span><button class="dp" onclick="delFD('Georges ELENGA-NGOLLO','Moise DJIMTOINGAR TOGDE')">✕</button></div>
         <button class="ap" onclick="openModal('FD','Georges ELENGA-NGOLLO')">+ Ajouter un FD</button>
+      </div></div><div class="card">
+      <div class="ch">
+        <button class="dcf" onclick="delCF('Hartybeyle MOUYOKOLO')">✕</button>
+        <div class="crow">
+          <div class="av">HM</div>
+          <div class="ci">
+            <div class="cn">Hartybeyle MOUYOKOLO</div>
+            <div class="ct">Berger de famille</div>
+          </div>
+          <div class="badge">1</div>
+        </div>
+      </div>
+      <div class="pls">
+        <div class="pl"><div class="pd"></div><span class="pn">Magali DOS SANTOS</span><button class="dp" onclick="delFD('Hartybeyle MOUYOKOLO','Magali DOS SANTOS')">✕</button></div>
+        <button class="ap" onclick="openModal('FD','Hartybeyle MOUYOKOLO')">+ Ajouter un FD</button>
       </div></div><div class="card">
       <div class="ch">
         <button class="dcf" onclick="delCF('Herve MAPAMA')">✕</button>
@@ -400,7 +415,7 @@ h1 span{color:#C9A84C}
 <div class="ov" id="ov" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <h3 id="mt">Ajouter un FD</h3>
-    <div id="mb"><label>Berger de famille</label><select id="mc"><option value="Axel ONDO">Axel ONDO</option><option value="Cedric NGOULOU">Cedric NGOULOU</option><option value="Christopher MBUNDANI">Christopher MBUNDANI</option><option value="Dominique EKOTTO">Dominique EKOTTO</option><option value="Eunice IGNAMBI">Eunice IGNAMBI</option><option value="Georges ELENGA-NGOLLO" selected="">Georges ELENGA-NGOLLO</option><option value="Herve MAPAMA">Herve MAPAMA</option><option value="Jessica LAZA MANZAMBI">Jessica LAZA MANZAMBI</option><option value="Joelle-Andrée TIEHI">Joelle-Andrée TIEHI</option><option value="Marie SANTOS">Marie SANTOS</option><option value="Marina-Ingrid N'GUESSAN">Marina-Ingrid N'GUESSAN</option><option value="Mobayi PELE">Mobayi PELE</option><option value="Naiyisha TCHANQUE">Naiyisha TCHANQUE</option><option value="Nelly EYOUM">Nelly EYOUM</option><option value="Nina NGOULOU">Nina NGOULOU</option><option value="Prescilia KIALA">Prescilia KIALA</option><option value="Rebbie MAPAMA">Rebbie MAPAMA</option><option value="Rebecca MOMBO">Rebecca MOMBO</option><option value="Trésor TSHIMANGA">Trésor TSHIMANGA</option><option value="Vianney PELE">Vianney PELE</option><option value="Zeina MEMENE">Zeina MEMENE</option></select><label>Prénom</label><input id="mp" placeholder="Prénom"><label>Nom</label><input id="mn" placeholder="NOM"></div>
+    <div id="mb"><label>Berger de famille</label><select id="mc"><option value="Axel ONDO">Axel ONDO</option><option value="Cedric NGOULOU">Cedric NGOULOU</option><option value="Christopher MBUNDANI">Christopher MBUNDANI</option><option value="Dominique EKOTTO">Dominique EKOTTO</option><option value="Eunice IGNAMBI">Eunice IGNAMBI</option><option value="Georges ELENGA-NGOLLO">Georges ELENGA-NGOLLO</option><option value="Hartybeyle MOUYOKOLO" selected="">Hartybeyle MOUYOKOLO</option><option value="Herve MAPAMA">Herve MAPAMA</option><option value="Jessica LAZA MANZAMBI">Jessica LAZA MANZAMBI</option><option value="Joelle-Andrée TIEHI">Joelle-Andrée TIEHI</option><option value="Marie SANTOS">Marie SANTOS</option><option value="Marina-Ingrid N'GUESSAN">Marina-Ingrid N'GUESSAN</option><option value="Mobayi PELE">Mobayi PELE</option><option value="Naiyisha TCHANQUE">Naiyisha TCHANQUE</option><option value="Nelly EYOUM">Nelly EYOUM</option><option value="Nina NGOULOU">Nina NGOULOU</option><option value="Prescilia KIALA">Prescilia KIALA</option><option value="Rebbie MAPAMA">Rebbie MAPAMA</option><option value="Rebecca MOMBO">Rebecca MOMBO</option><option value="Trésor TSHIMANGA">Trésor TSHIMANGA</option><option value="Vianney PELE">Vianney PELE</option><option value="Zeina MEMENE">Zeina MEMENE</option></select><label>Prénom</label><input id="mp" placeholder="Prénom"><label>Nom</label><input id="mn" placeholder="NOM"></div>
     <div class="mbtns">
       <button class="btn" onclick="closeModal()">Annuler</button>
       <button class="btn acc" onclick="confirmModal()">Confirmer</button>
@@ -556,6 +571,9 @@ let db = {
     "Lyne Karla VEVO",
     "Sarah TSOLENYANU",
     "Sabrina ALEXIS"
+  ],
+  "Hartybeyle MOUYOKOLO": [
+    "Magali DOS SANTOS"
   ]
 };
 let ma = null;
